@@ -1,0 +1,26 @@
+{
+	"authors": [
+		"Danni Coy"
+	],
+	"copyright": "Copyright © 2020, Danni Coy",
+	"dependencies": {
+		"nogc": "~>0.5.0"
+	},
+	"description": "live looping software",
+	"license": "proprietary",
+	"name": "subterrainian",
+	"sourcePaths" : [
+		"source",
+		"ext"
+	],
+	"libs" :
+	[
+		"jack",
+		"X11",
+		"SDL2"
+	],
+	"dflags" :
+	[
+		"-version=X11"
+	]
+}
