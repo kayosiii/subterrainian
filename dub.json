@@ -17,7 +17,9 @@
 	[
 		"jack",
 		"X11",
-		"SDL2"
+		"SDL2",
+		"SDL2_gfx",
+		"SDL2_ttf"
 	],
 	"dflags" :
 	[

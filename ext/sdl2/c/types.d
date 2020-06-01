@@ -1175,11 +1175,13 @@ enum SDL_PACKEDLAYOUT
     {
         union
         {
-            struct {ubyte r; ubyte g; ubyte b; ubyte a;}  
+            struct {ubyte r; ubyte g; ubyte b; ubyte a;} 
+            uint packed;
             ubyte[4] rgba; 
         }
         alias rgba this;
         void opAssign(ubyte[4]c) { rgba = c; }
+        void opAssign(uint c) { this.packed = c; }
     }
     struct SDL_Palette
     {
@@ -1615,6 +1617,14 @@ struct SDL_Texture;
     alias SDL_iconv_t = _SDL_iconv_t*;
     struct _SDL_iconv_t;
 
+enum SDL_SurfaceFlags
+{
+    SWSURFACE =      0 ,          /**< Just here for compatibility */
+    PREALLOC  =      0x00000001,  /**< Surface uses preallocated memory */
+    RLEACCEL  =      0x00000002,  /**< Surface is RLE encoded */
+    DONTFREE  =      0x00000004,  /**< Surface is referenced internally */
+    SIMD_ALIGNED =   0x00000008  /**< Surface uses aligned memory */
+}
  struct SDL_Surface
 {
     uint flags;
@@ -1704,6 +1714,12 @@ struct SDL_DisplayMode
         TOOLTIP = 262144,
         POPUP_MENU = 524288,
         VULKAN = 268435456,
+    }
+    enum SDL_FullscreenMode
+    {
+        NONE = 0,
+        FULLSCREEN = 1,
+        FULLSCREEN_DESKTOP = 4097
     }
 
     enum SDL_WindowEventID
@@ -1815,3 +1831,6 @@ struct SDL_DisplayMode
  struct __va_list_tag;
 struct SDL_BlitMap;
 struct _SDL_AudioStream;
+
+alias TTF_Font = _TTF_Font;
+struct _TTF_Font;

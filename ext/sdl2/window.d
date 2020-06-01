@@ -1,10 +1,10 @@
 module sdl2.window;
 
 import core.stdc.string : strlen;
-import vector;
+import vectortype;
 
-public import sdl2.c.types : SDL_WindowFlags, SDL_RendererFlags;
-import sdl2.renderer;
+public import sdl2.c.types : SDL_WindowFlags, SDL_RendererFlags, SDL_FullscreenMode;
+import sdl2.renderer, sdl2.surface;
 
 
 struct SDLWindow
@@ -76,10 +76,10 @@ import sdl2.c.sdl : SDL_GetWindowDisplayIndex, SDL_SetWindowDisplayMode, SDL_Get
         auto tmp = SDL_GetWindowTitle(ptr);
         return cast(string) tmp[0..strlen(tmp)];
     }
-    // @property void icon(ref SDLSurface s) @trusted @nogc nothrow
-    // {
-    //     SDL_SetWindowIcon(ptr,&s);
-    // }
+    @property void icon(ref SDLSurface s) @trusted @nogc nothrow
+    {
+        SDL_SetWindowIcon(ptr,s.ptr);
+    }
     void * setData(string name, void * data) @trusted @nogc nothrow
     {
         return SDL_SetWindowData(ptr,name.ptr,data);
@@ -167,10 +167,10 @@ import sdl2.c.sdl : SDL_GetWindowDisplayIndex, SDL_SetWindowDisplayMode, SDL_Get
     {
         SDL_RestoreWindow(ptr);
     }
-    // @property void fullscreen (SDL_FullScreenMode mode)
-    // {
-    //     SDL_SetWindowFullscreen(ptr,mode);
-    // }
+    @property void fullscreen (SDL_FullscreenMode mode)
+    {
+        SDL_SetWindowFullscreen(ptr,mode);
+    }
     int updateSurface ()
     {
         return SDL_UpdateWindowSurface(ptr);

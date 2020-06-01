@@ -1,7 +1,16 @@
-module vector;
+module vectortype;
 
 struct vec2(T)
 {
+    this(T[2] d)
+    {
+        data = d;
+    }
+    this (T x, T y)
+    {
+        this.x = x;
+        this.y = y;
+    }
     union
     {
         struct {T x; T y;}
@@ -12,6 +21,10 @@ struct vec2(T)
     void opAssign (T[2] v)
     {
         data = v;
+    }
+    auto opBinary(string op)(const (T) rhs) const
+    {
+        mixin("return vec2!T(x"~op~"rhs,y"~op~"rhs);");
     }
 }
 

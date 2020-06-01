@@ -79,7 +79,6 @@ extern(C)
     void* SDL_AtomicSetPtr(void**, void*) @nogc nothrow;
     void* SDL_AtomicGetPtr(void**) @nogc nothrow;
 
-    
     int SDL_GetNumAudioDrivers() @nogc nothrow;
     const(char)* SDL_GetAudioDriver(int) @nogc nothrow;
     int SDL_AudioInit(const(char)*) @nogc nothrow;
@@ -530,8 +529,6 @@ extern(C)
     c_ulong SDL_WriteLE64(SDL_RWops*, c_ulong) @nogc nothrow;
     c_ulong SDL_WriteBE64(SDL_RWops*, c_ulong) @nogc nothrow;
    
-    static void _invpcid(uint, void*) @nogc nothrow;
- 
     int SDL_NumSensors() @nogc nothrow;
     const(char)* SDL_SensorGetDeviceName(int) @nogc nothrow;
     SDL_SensorType SDL_SensorGetDeviceType(int) @nogc nothrow;
@@ -546,9 +543,9 @@ extern(C)
     int SDL_SensorGetData(_SDL_Sensor*, float*, int) @nogc nothrow;
     void SDL_SensorClose(_SDL_Sensor*) @nogc nothrow;
     void SDL_SensorUpdate() @nogc nothrow;
+
     SDL_Window* SDL_CreateShapedWindow(const(char)*, uint, uint, uint, uint, uint) @nogc nothrow;
     SDL_bool SDL_IsShapedWindow(const(SDL_Window)*) @nogc nothrow;
-    
     int SDL_SetWindowShape(SDL_Window*, SDL_Surface*, SDL_WindowShapeMode*) @nogc nothrow;
     int SDL_GetShapedWindowMode(SDL_Window*, SDL_WindowShapeMode*) @nogc nothrow;
     
@@ -681,9 +678,7 @@ extern(C)
     int SDL_LockSurface(SDL_Surface*) @nogc nothrow;
     void SDL_UnlockSurface(SDL_Surface*) @nogc nothrow;
     SDL_Surface* SDL_LoadBMP_RW(SDL_RWops*, int) @nogc nothrow;
-    static int _rdrand32_step(uint*) @nogc nothrow;
     int SDL_SaveBMP_RW(SDL_Surface*, SDL_RWops*, int) @nogc nothrow;
-    static int _rdrand16_step(ushort*) @nogc nothrow;
     int SDL_SetSurfaceRLE(SDL_Surface*, int) @nogc nothrow;
     int SDL_SetColorKey(SDL_Surface*, int, uint) @nogc nothrow;
     SDL_bool SDL_HasColorKey(SDL_Surface*) @nogc nothrow;
@@ -705,9 +700,9 @@ extern(C)
     int SDL_UpperBlit(SDL_Surface*, const(SDL_Rect)*, SDL_Surface*, SDL_Rect*) @nogc nothrow;
     int SDL_LowerBlit(SDL_Surface*, SDL_Rect*, SDL_Surface*, SDL_Rect*) @nogc nothrow;
     int SDL_SoftStretch(SDL_Surface*, const(SDL_Rect)*, SDL_Surface*, const(SDL_Rect)*) @nogc nothrow;
-    static uint _rdpid_u32() @nogc nothrow;
     int SDL_UpperBlitScaled(SDL_Surface*, const(SDL_Rect)*, SDL_Surface*, SDL_Rect*) @nogc nothrow;
     int SDL_LowerBlitScaled(SDL_Surface*, SDL_Rect*, SDL_Surface*, SDL_Rect*) @nogc nothrow;
+    
     void SDL_SetYUVConversionMode(SDL_YUV_CONVERSION_MODE) @nogc nothrow;
     SDL_YUV_CONVERSION_MODE SDL_GetYUVConversionMode() @nogc nothrow;
     SDL_YUV_CONVERSION_MODE SDL_GetYUVConversionModeForResolution(int, int) @nogc nothrow;
@@ -810,6 +805,7 @@ extern(C)
     int SDL_GetWindowGammaRamp(SDL_Window*, ushort*, ushort*, ushort*) @nogc nothrow;
     int SDL_SetWindowHitTest(SDL_Window*, SDL_HitTestResult function(SDL_Window*, const(SDL_Point)*, void*), void*) @nogc nothrow;
     void SDL_DestroyWindow(SDL_Window*) @nogc nothrow;
+    
     SDL_bool SDL_IsScreenSaverEnabled() @nogc nothrow;
     void SDL_EnableScreenSaver() @nogc nothrow;
     void SDL_DisableScreenSaver() @nogc nothrow;
@@ -829,8 +825,56 @@ extern(C)
     int SDL_GL_GetSwapInterval() @nogc nothrow;
     void SDL_GL_SwapWindow(SDL_Window*) @nogc nothrow;
     void SDL_GL_DeleteContext(void*) @nogc nothrow;
-    pragma(mangle, "alloca") void* alloca_(c_ulong) @nogc nothrow;
-    
+
+    const(SDL_version)* TTF_Linked_Version() @nogc nothrow;
+    void TTF_ByteSwappedUNICODE(int) @nogc nothrow;
+
+    int TTF_Init() @nogc nothrow;
+    _TTF_Font* TTF_OpenFont(const(char)*, int) @nogc nothrow;
+    _TTF_Font* TTF_OpenFontIndex(const(char)*, int, c_long) @nogc nothrow;
+    _TTF_Font* TTF_OpenFontRW(SDL_RWops*, int, int) @nogc nothrow;
+    _TTF_Font* TTF_OpenFontIndexRW(SDL_RWops*, int, int, c_long) @nogc nothrow;
+    int TTF_GetFontStyle(const(_TTF_Font)*) @nogc nothrow;
+    void TTF_SetFontStyle(_TTF_Font*, int) @nogc nothrow;
+    int TTF_GetFontOutline(const(_TTF_Font)*) @nogc nothrow;
+    void TTF_SetFontOutline(_TTF_Font*, int) @nogc nothrow;
+    int TTF_GetFontHinting(const(_TTF_Font)*) @nogc nothrow;
+    void TTF_SetFontHinting(_TTF_Font*, int) @nogc nothrow;
+    int TTF_FontHeight(const(_TTF_Font)*) @nogc nothrow;
+    int TTF_FontAscent(const(_TTF_Font)*) @nogc nothrow;
+    int TTF_FontDescent(const(_TTF_Font)*) @nogc nothrow;
+    int TTF_FontLineSkip(const(_TTF_Font)*) @nogc nothrow;
+    int TTF_GetFontKerning(const(_TTF_Font)*) @nogc nothrow;
+    void TTF_SetFontKerning(_TTF_Font*, int) @nogc nothrow;
+    c_long TTF_FontFaces(const(_TTF_Font)*) @nogc nothrow;
+    int TTF_FontFaceIsFixedWidth(const(_TTF_Font)*) @nogc nothrow;
+    char* TTF_FontFaceFamilyName(const(_TTF_Font)*) @nogc nothrow;
+    char* TTF_FontFaceStyleName(const(_TTF_Font)*) @nogc nothrow;
+    int TTF_GlyphIsProvided(const(_TTF_Font)*, ushort) @nogc nothrow;
+    int TTF_GlyphMetrics(_TTF_Font*, ushort, int*, int*, int*, int*, int*) @nogc nothrow;
+    int TTF_SizeText(_TTF_Font*, const(char)*, int*, int*) @nogc nothrow;
+    int TTF_SizeUTF8(_TTF_Font*, const(char)*, int*, int*) @nogc nothrow;
+    int TTF_SizeUNICODE(_TTF_Font*, const(ushort)*, int*, int*) @nogc nothrow;
+    SDL_Surface* TTF_RenderText_Solid(_TTF_Font*, const(char)*, SDL_Color) @nogc nothrow;
+    SDL_Surface* TTF_RenderUTF8_Solid(_TTF_Font*, const(char)*, SDL_Color) @nogc nothrow;
+    SDL_Surface* TTF_RenderUNICODE_Solid(_TTF_Font*, const(ushort)*, SDL_Color) @nogc nothrow;
+    SDL_Surface* TTF_RenderGlyph_Solid(_TTF_Font*, ushort, SDL_Color) @nogc nothrow;
+    SDL_Surface* TTF_RenderText_Shaded(_TTF_Font*, const(char)*, SDL_Color, SDL_Color) @nogc nothrow;
+    SDL_Surface* TTF_RenderUTF8_Shaded(_TTF_Font*, const(char)*, SDL_Color, SDL_Color) @nogc nothrow;
+    SDL_Surface* TTF_RenderUNICODE_Shaded(_TTF_Font*, const(ushort)*, SDL_Color, SDL_Color) @nogc nothrow;
+    SDL_Surface* TTF_RenderGlyph_Shaded(_TTF_Font*, ushort, SDL_Color, SDL_Color) @nogc nothrow;
+    SDL_Surface* TTF_RenderText_Blended(_TTF_Font*, const(char)*, SDL_Color) @nogc nothrow;
+    SDL_Surface* TTF_RenderUTF8_Blended(_TTF_Font*, const(char)*, SDL_Color) @nogc nothrow;
+    SDL_Surface* TTF_RenderUNICODE_Blended(_TTF_Font*, const(ushort)*, SDL_Color) @nogc nothrow;
+    SDL_Surface* TTF_RenderText_Blended_Wrapped(_TTF_Font*, const(char)*, SDL_Color, uint) @nogc nothrow;
+    SDL_Surface* TTF_RenderUTF8_Blended_Wrapped(_TTF_Font*, const(char)*, SDL_Color, uint) @nogc nothrow;
+    SDL_Surface* TTF_RenderUNICODE_Blended_Wrapped(_TTF_Font*, const(ushort)*, SDL_Color, uint) @nogc nothrow;
+    SDL_Surface* TTF_RenderGlyph_Blended(_TTF_Font*, ushort, SDL_Color) @nogc nothrow;
+    void TTF_CloseFont(_TTF_Font*) @nogc nothrow;
+    void TTF_Quit() @nogc nothrow;
+    int TTF_WasInit() @nogc nothrow;
+    int TTF_GetFontKerningSize(_TTF_Font*, int, int) @nogc nothrow;
+    int TTF_GetFontKerningSizeGlyphs(_TTF_Font*, ushort, ushort) @nogc nothrow;
 }
 
 

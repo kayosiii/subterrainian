@@ -1,0 +1,5 @@
+#include "/usr/include/jack/jack.h"
+mixin dpp.EnumD!("JackPortFlags", JackPortFlags, "JackPort");
+mixin dpp.EnumD!("JackLatencyCallbackMode", JackLatencyCallbackMode, "Jack");
+mixin dpp.EnumD!("JackStatus", JackStatus, "Jack");
+mixin dpp.EnumD!("JackOptions", JackOptions, "Jack");
