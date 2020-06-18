@@ -2,18 +2,25 @@ import std.stdio;
 import nogc.exception : enforce;
 
 import memory, video, audio, input;
+import core.time : seconds, Duration;
+
+import core.thread : Thread;
 version(X11) import xlib;
 import sdl2.core;
 
 
 /// 
-void go () @safe
+void go () 
 {
-	version(X11) { enforce (xlib.initThreads, "CORE: xlib needs to be multithreaded"); }
-	else { assert (0,"CORE: currently xwindows only supported"); }
+	xlib.initThreads();
 
-	enforce ( sdl2.core.init(SDLInit.VIDEO|SDLInit.JOYSTICK) == 0, "CORE: failed to start SDL");
+	// version(X11) { enforce (xlib.initThreads, "CORE: xlib needs to be multithreaded"); }
+	// else { assert (0,"CORE: currently xwindows only supported"); }
 
+	// enforce ( sdl2.core.init(SDLInit.VIDEO|SDLInit.JOYSTICK) == 0, "CORE: failed to start SDL");
+
+	sdl2.core.init(SDLInit.VIDEO|SDLInit.JOYSTICK);
+	
 	video.start();
 	scope(exit) video.stop();
 	
@@ -22,7 +29,7 @@ void go () @safe
 
 	audio.start();
 	scope(exit) audio.stop();
-
+	Thread.sleep(seconds(1));
 	input.start();
 }
 

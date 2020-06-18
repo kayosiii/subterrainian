@@ -1180,9 +1180,44 @@ enum SDL_PACKEDLAYOUT
             ubyte[4] rgba; 
         }
         alias rgba this;
-        void opAssign(ubyte[4]c) { rgba = c; }
+        void opAssign(ubyte[4] c) { rgba = c; }
         void opAssign(uint c) { this.packed = c; }
+        auto opBinary(string op)(float rhs)
+        {
+            SDL_Color ret;
+            mixin("ret.r = cast(ubyte)(cast(float)r"~op~"rhs);");
+            mixin("ret.g = cast(ubyte)(cast(float)g"~op~"rhs);");
+            mixin("ret.b = cast(ubyte)(cast(float)b"~op~"rhs);");
+            mixin("ret.a = cast(ubyte)(cast(float)a"~op~"rhs);");
+            return ret;
+        }
+        auto opBinary(string op)(ubyte rhs)
+        {
+            static if (op == "*") 
+            {
+                SDL_Color ret;
+                int tmp = min(((cast(int)ret.r*rhs) >> 8),255);
+                ret.r = cast(ubyte)(tmp & 0x000000ff);
+                tmp = min(((cast(int)ret.g*rhs) >> 8),255);
+                ret.g = cast(ubyte)(tmp & 0x000000ff);
+                tmp = min(((cast(int)ret.b*rhs) >> 8),255);
+                ret.b = cast(ubyte)(tmp & 0x000000ff);
+                tmp = min(((cast(int)ret.a*rhs) >> 8),255);
+                ret.a = cast(ubyte)(tmp & 0x000000ff);
+                return ret;
+            }
+            else
+            {
+                assert(0,"op not implemented");
+            }
+        }
+        auto opBinary(string op)(const float f) const
+        {
+            mixin("return SDL_Color(cast(ubyte)(r"~op~"f), cast(ubyte)(g"~op~"f), cast(ubyte)(b"~op~"f),cast(ubyte)(a"~op~"f));");
+        }
+
     }
+
     struct SDL_Palette
     {
         int ncolors;
@@ -1233,9 +1268,52 @@ struct SDLPoint(T)
     }
     alias xy this;
     void opAssign(T[2] v) { xy = v; }
+    void opAssign(SDLRect!T r) { this.xy = r.xy; }
+    void opAssign(SDLPoint!T p) { this.xy = p.xy; }
+
+    void opAssign(U)(U value)
+        if (is(U==T) || is(U==T[2]) || is(U==SDLRect!T) || is(U==SDLPoint!T))
+    {
+        static if (is(U==T)) 
+            xy[] = value;
+        else static if (is(U==SDLRect!T)) 
+            xy[] = value.xy[];
+        else
+            xy[] = value[];
+    }
+    auto opOpAssign(string op, U)(const U value)
+        if (is(U==T) || is(U==T[2]) || is(U==SDLRect!T) || is(U==SDLPoint!T))
+    {
+        static if (is(U==T)) 
+            mixin("xy[] "~op~"= value;");
+        else static if (is(U==SDLRect!T)) 
+            mixin("xy[] "~op~"= value.xy[];");
+        else 
+            mixin("xy[] "~op~"= value[];");
+
+        return this;
+    }
+    SDLPoint!T opBinary(string op)(const T rhs)
+    {
+        SDLPoint!T r;
+        mixin("r[] = xy[]"~op~" rhs;");
+        return r;
+    }
+    inout SDLPoint!T opBinary(string op)(inout const SDLPoint!T rhs)
+    {
+        SDLPoint!T r;
+        mixin("r[] = xy[] "~op~" rhs[];");
+        return r;
+    }
 }
 alias SDL_Point = SDLPoint!int;
 alias SDL_FPoint = SDLPoint!float;
+// sometimes you have a pair of variables 
+// that logically have an x and a y value
+
+alias SDLPair = SDLPoint;
+alias SDL_Pair = SDLPoint!int;
+alias SDL_FPair = SDLPoint!float;
 
 struct SDLRect(T)
     if (is(T == float) || is(T == int))
@@ -1243,11 +1321,18 @@ struct SDLRect(T)
     union
     {
         struct { T x; T y; T w; T h; }
+        struct { SDLPoint!T xy; SDLPair!T wh;}
         T[4] xywh;
     }
     alias xywh this;
-    
+
     void opAssign(T[4] v) { xywh = v; }
+    inout SDLRect!T opBinary(string op)(inout const SDLPoint!T rhs)
+    {
+        rect!T r;
+        mixin("r[] = xy[] "~op~" rhs[];");
+        return r;
+    }
 }
 alias SDL_Rect = SDLRect!int;
 alias SDL_FRect = SDLRect!float;

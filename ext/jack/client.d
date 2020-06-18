@@ -56,7 +56,7 @@ import jack.port : JackPort;
     this(string name, JackOptions options, ref JackStatus status) @nogc
     {
         ptr = jack_client_open(&name[0], options, null);
-        enforce(ptr != null, "could not open jack client");
+        // enforce(ptr != null, "could not open jack client");
     }
     ~this() @nogc
     {

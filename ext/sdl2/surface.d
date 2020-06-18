@@ -1,21 +1,12 @@
 module sdl2.surface;
 import vectortype;
 import sdl2.c.types: SDL_Surface, SDL_bool, SDL_SurfaceFlags;
-public import sdl2.c.types : SDL_Palette, SDL_RWops, SDL_Color, SDL_BlendMode, SDL_Rect, SDL_PixelFormat, SDL_TextureAccess;
+public import sdl2.c.types : SDL_Palette, SDL_RWops, SDL_Color, SDL_BlendMode, SDL_Rect, SDL_PixelFormat,
+                             SDL_PixelFormatEnum, SDL_TextureAccess;
+                              
 
 struct SDLSurface
 {
-
-    import sdl2.c.sdl : SDL_CreateRGBSurface, SDL_CreateRGBSurfaceWithFormat, SDL_CreateRGBSurfaceFrom,
-                        SDL_CreateRGBSurfaceWithFormatFrom, SDL_FreeSurface, SDL_SetSurfacePalette,
-                        SDL_LockSurface, SDL_UnlockSurface, SDL_LoadBMP_RW, SDL_SaveBMP_RW, 
-                        SDL_SetSurfaceRLE, SDL_SetColorKey, SDL_HasColorKey, SDL_GetColorKey,
-                        SDL_SetSurfaceColorMod, SDL_GetSurfaceColorMod, SDL_SetSurfaceAlphaMod,
-                        SDL_GetSurfaceAlphaMod, SDL_SetSurfaceBlendMode, SDL_GetSurfaceBlendMode,
-                        SDL_SetClipRect, SDL_GetClipRect, SDL_DuplicateSurface, SDL_ConvertSurface,
-                        SDL_ConvertSurfaceFormat, SDL_ConvertPixels, SDL_FillRect, SDL_FillRects,
-                        SDL_UpperBlit, SDL_LowerBlit, SDL_SoftStretch, SDL_UpperBlitScaled,
-                        SDL_LowerBlitScaled; 
 
     this(uint flags, int width, int height, int depth, vec4!uint mask) @trusted @nogc nothrow
     {
@@ -45,7 +36,21 @@ struct SDLSurface
     {
         SDL_FreeSurface(ptr);
     }
+    @property bool isNull() @trusted @nogc nothrow
+    {
+        return (ptr == null);
+    }
+    @property T[] pixels(T) () @trusted @nogc nothrow
+    in { assert(ptr.format.BytesPerPixel == T.sizeof,"surface is not in the right bitdeth");}
+    body
+    {
 
+        return cast(T[]) ptr.pixels[0..ptr.w*ptr.h*ptr.format.BytesPerPixel];
+    }
+    @property void[] pixels () @trusted @nogc nothrow
+    {
+        return cast(void[]) ptr.pixels[0..ptr.w*ptr.h*ptr.format.BytesPerPixel];
+    }
     @property void palette (ref SDL_Palette pal) @trusted @nogc nothrow
     {
         SDL_SetSurfacePalette(ptr,&pal);
@@ -151,13 +156,17 @@ struct SDLSurface
     }
 
     // int convertPixels()
+    void fill(SDL_Color c) @trusted @nogc nothrow
+    {
+        SDL_FillRect(ptr,null,SDL_MapRGBA(ptr.format,c.r,c.g,c.b,c.a));
+    }
     void fillRect(ref const(SDL_Rect) r, SDL_Color c) @trusted @nogc nothrow
     {
-        SDL_FillRect(ptr,&r,c.packed);
+        SDL_FillRect(ptr,&r,SDL_MapRGBA(ptr.format,c.r,c.g,c.b,c.a));
     }
     void fillRects(ref const(SDL_Rect)[] rects, SDL_Color c) @trusted @nogc nothrow
     {
-        SDL_FillRects(ptr,rects.ptr,cast(int)rects.length,c.packed);
+        SDL_FillRects(ptr,rects.ptr,cast(int)rects.length,SDL_MapRGBA(ptr.format,c.r,c.g,c.b,c.a));
     }
     void upperBlit( ref const(SDL_Rect) r, ref SDLSurface dest, ref SDL_Rect dest_r) @trusted @nogc nothrow
     {
@@ -181,4 +190,15 @@ struct SDLSurface
     }
     SDL_Surface * ptr;
     alias ptr this;
+
+    import sdl2.c.sdl : SDL_CreateRGBSurface, SDL_CreateRGBSurfaceWithFormat, SDL_CreateRGBSurfaceFrom,
+                    SDL_CreateRGBSurfaceWithFormatFrom, SDL_FreeSurface, SDL_SetSurfacePalette,
+                    SDL_LockSurface, SDL_UnlockSurface, SDL_LoadBMP_RW, SDL_SaveBMP_RW, 
+                    SDL_SetSurfaceRLE, SDL_SetColorKey, SDL_HasColorKey, SDL_GetColorKey,
+                    SDL_SetSurfaceColorMod, SDL_GetSurfaceColorMod, SDL_SetSurfaceAlphaMod,
+                    SDL_GetSurfaceAlphaMod, SDL_SetSurfaceBlendMode, SDL_GetSurfaceBlendMode,
+                    SDL_SetClipRect, SDL_GetClipRect, SDL_DuplicateSurface, SDL_ConvertSurface,
+                    SDL_ConvertSurfaceFormat, SDL_ConvertPixels, SDL_FillRect, SDL_FillRects,
+                    SDL_UpperBlit, SDL_LowerBlit, SDL_SoftStretch, SDL_UpperBlitScaled,
+                    SDL_LowerBlitScaled, SDL_MapRGBA; 
 }

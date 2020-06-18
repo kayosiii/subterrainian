@@ -1,228 +1,460 @@
-// module tmp;
+module tmp;
 
-// import nogc.exception : enforce;
-// import memory;
-// import vectortype;
+import nogc.exception : enforce;
+import memory;
+import vectortype;
 
+import std.math : pow;
+enum semitoneRatio = pow(2.0,1.0/12.0);
+enum c5 = 220.0 * pow(semitoneRatio,3.0);
+enum c0 = c5 * pow (0.5, 5.0);
 
+T MIDINoteToFrequency(T)(int note)
+{
+    return c0 * pow(semitoneRatio, note); 
+}
+int FrequencyToMidiNote(T)(T frequency)
+{
+    return cast(int) ( log(frequency/c0) / log(semitoneRatio) + 0.5);
+    import std.math : log;
+}
+enum Err
+{
+    none = 0,
+    occured = 1
+}
 
+struct Smoother(T)
+{
+    private 
+    { 
+        T v; 
+        T _target;
+        T Δv;
+        T vmax;
+        T vmin;
+        T freq;
+    }
+    this(T v, Duration time, double sampleRate, T vmin = 0, T vmax = 1)
+    {
+        this.v = v;
+        this.vmin = vmin;
+        this.vmax = vmax;
+        this._target = v;
+        this.Δv = time.total!"seconds" / sampleRate;
+    }
+    @property T value ()
+    {
+        return v;
+    }
+    @property void target (T tv)
+    {
+        atomicStore(_target,tv.clamp(vmin,vmax));
+    }
+    @property void delta (T Δ)
+    {
+        this.Δv = max(Δ,0);
+    }
+    @property void Δ (T d)
+    {
+        this.Δv = max(d,0);
+    }
+    enum empty = false;
+    @property T front ()
+    {
+        return v;
+    }
+    void popFront ()
+    {
+        auto tv = atomicLoad!()(_target);
+        if (tv == v) return;
+        auto dir = tv > v ? 1.0 : -1.0;
+        v += (dir*(min(abs(tv-v),Δv)));
+    }
+    T opIndex(size_t index)
+    {
+        auto tv = atomicLoad!()(_target);
+        if (tv == v) return v;
+        auto dir = tv > v ? 1.0 : -1.0;
+        return v + (dir*(min(abs(tv-v), Δv*index)));  
+    }
 
-// struct Smoother(T)
+    import core.atomic : atomicStore, atomicLoad, MemoryOrder;
+    import core.time : Duration, seconds;
+    import std.math : abs;
+    import std.algorithm.comparison : max,min,clamp;
+
+}
+
+struct sinGenerator
+{
+    this(float samplerate,float freq)
+    {
+        this.sampleRate = samplerate;
+        // frequency = Smoother!float(freq,0.0,float.max);
+    }
+    enum empty = false;
+    @property float front ()
+    {
+        return sin(2*π*frequency.value*pos/sampleRate);
+    }
+    void popFront()
+    {
+        pos += 1.0;
+    }
+    float pos;
+    Smoother!float  frequency = void;
+    float sampleRate;
+    size_t chunckSize;
+    import std.math : PI, sin;
+    alias π = PI;
+}
+
+enum WaveTableType
+{
+    ARBITRARY = -1,
+    SINE = 0,
+    SQUARE = 1,
+    SAW = 2,
+    TRIANGLE = 3
+}
+
+struct WaveTable(T)
+{
+    this (ref T[] table, size_t sampleRate)
+    {
+        this.table = table;
+        this.sampleRate = sampleRate;
+
+    }
+    this (WaveTableType type, size_t length)
+    in { assert (type >= 0 && type <= WaveTableType.TRIANGLE); }
+    body
+    {
+        table = memory.allocator.makeArray!T(length);
+        float pos = 0.0; 
+        float ln = cast(float) length;
+        final switch(type) with (WaveTableType)
+        {
+            case ARBITRARY: break;
+            case SINE:
+                foreach (ref sample; table)
+                {
+                    sample = sin(2*π*pos/ln);
+                    pos += 1.0;
+                }
+                break;
+            case SQUARE:
+                table[0..table.length/2] = 1.0;
+                table[table.length/2..$] = -1.0;
+                break;
+            case SAW:
+                foreach (ref sample; table)
+                {
+                    sample = 1.0 - (2.0 * pos / ln);
+                    pos += 1.0;
+                }
+                break;
+            case TRIANGLE:
+                float halfln = ln / 2.0;
+                foreach (ref sample; table[0..table.length/2])
+                {
+                    sample = 2*pos/halfln-1.0;
+                    pos += 1.0;
+                }
+                foreach (ref sample; table[table.length/2..$])
+                {
+                    sample = 1.0 - (2*(pos - halfln)/halfln);
+                    pos += 1.0;
+                }
+                break;
+        }
+    }
+
+    T[] table;
+    size_t sampleRate;
+    WaveTableType type;
+    import std.math : PI, sin;
+    alias PI = π;
+}
+
+struct Panner(T)
+{
+    enum halfπ = PI/2.0;
+    enum halfRoot2 = SQRT2*0.5;
+    Smoother!T angle;
+    enum empty = false;
+    @property T front()
+    {
+
+    }
+    T panStereoLeft(T input)
+    {
+        return halfRoot2 * (cos(angle.value) - sin(angle.value));
+    }
+    T panStereoRight()
+    {
+        return halfRoot2 * (cos(angle.value) + sin(angle.value));
+    }
+    import std.math : PI,SQRT2,sin,cos;
+}
+
+// void snippit (SDL_Renderer renderer)
 // {
-//     private 
-//     { 
-//         T v; 
-//         T tv;
-//         T Δv;
-//         T vmax;
-//         T vmin;
-//         T freq;
-//         T dir;
-//     }
-//     this(T v, T vmin = 0, T vmax = 1)
-//     {
-//         this.v = v;
-//         this.vmin = vmin;
-//         this.vmax = vmax;
-//         this.tv = v;
-//     }
-//     @property void target (T tv)
-//     {
-//         this.tv = tv.clamp(vmin,vmax);
-//         dir = tv < v ? -1 : 1;
-//     }
-//     @property void delta (T Δ)
-//     {
-//         this.Δv = max(Δ,0);
-//     }
-//     @property void Δ (T d)
-//     {
-//         this.Δv = max(d,0);
-//     }
-//     void hitTargetIn (T tv, Duration d)
-//     {
-//         this.tv = tv.clamp(vmin,vmax);
-//         this.Δv = abs(tv-v) / (d/freq);
-//     }
-//     enum empty = false;
-//     @property T front ()
-//     {
-//         return v;
-//     }
-//     void popFront ()
-//     {
-//         v += (dir*(min(abs(tv-v),Δv)));
-//     }
-//     T opIndex(size_t index)
-//     {
-//       return v + (dir*(min(abs(tv-v), Δv*index)));  
-//     }
-
-//     import core.time : Duration;
-//     import std.math : abs, min, max;
-//     import std.algorithm.comparison : clamp;
+//     vec2!int sz = vec2!int(320,320);
+//     SDLSurface loopAnnulus = SDLSurface(0,sz, 32,SDL_PIXELFORMAT.ARGB8888);
+//     SDLTexture loopTex = renderer.makeTexture(SDL_PIXELFORMAT.ARGB8888,SDL_TEXTUREACCESS.STREAMING,sz);
+//     loopTex.update(null,surface.pixels,surface.pitch);
+//     renderer.clear();
+//     renderer.copy(loopTex);
+//     renderer.present();
 // }
 
-//  struct CircularMap(T)
+import std.typecons : tuple;
+pragma(inline,true) T[] lerp(T) (T[] t1, T[] t2, T v)
+if (__traits(isFloating,T))
+{
+    return t1[] * v + t2[] * (1.0-v);
+}
+pragma(inline,true) inout(T) lerpStaticArray(T,M,S)(inout(T) t1, inout(T) t2, S v)
+    if (__traits(isStaticArray,M))
+{
+    T r;
+    S inverse = 1.0 - v;
+    static if (__traits(isFloating,M))
+    {
+        r[] = t1[]*v + t2[]*inverse;
+    }
+    else 
+    {
+        foreach(i; 0..M.length)
+        {
+            r[i] = cast(typeof(r[i])) (cast(S)t1[i]*v + cast(S)t2[i]*inverse);
+        }
+    }
+    return r;
+}
+
+inout(T) lerp(T,S)(inout(T) t1, inout(T) t2, S v)
+    if (__traits(isFloating,S))
+{
+    import std.traits : isNumeric;
+    static if (isNumeric!T)
+    {
+        return t1*v + t2*(1.0-v);
+    }
+    else static if (__traits(isStaticArray,T) && isNumeric!(typeof(t1[0]))) 
+    {
+        return lerpStaticArray!(T,T,S)(t1,t2,v);
+    }
+    static foreach(M; __traits(getAliasThis,T))
+    {
+        static if (__traits(isStaticArray,__traits(getMember,T,M))&&isNumeric!(typeof(t1[0])))
+        {
+            return lerpStaticArray!(T,typeof(__traits(getMember,T,M)),S)(t1,t2,v);
+        }
+    }
+}
+
+
+
+
+
+
+
+
+// private void _ellipseAA(SDL_Point p, Pair radius)
+// in { assert(radius.x >= 0 && radius.y >= 0); }
+// body
 // {
-//     this(ref SDLSurface inSurface, vec2!int size, vec2!int inSize, int innerRadius, int outerRadius)
+//     if (radius.x == 0)
 //     {
-//         this.inSurface = inSurface;
-//         this.size = size;
-//         this.inSize = inSize;
-//         this.innerRadius = innerRadius;
-//         this.outerRadius = outerRadius;
+//         if (radius.y == 0) return drawPoint(p);
+//         else return drawLine( {p.x; p.y-radius.y;}, {p.x; p.y+radius.y;} );
+//     }
+//     else if (radius.y == 0)
+//     {
+//         return drawLine( {p.x-radius.x; p.y;}, {p.x+radius.x; p.y;} );
+//     }
 
-//         map = memory.allocator.makeArray!ubyte(size.x*size.y);
-//         // encodes 4 regions per row indicating how many
-//         // many pixels make up each regions
-//         scanmap = memory.allocator.makeArray!int(4*size.y);
-        
-//         vec2!int center; center[] = size[]/2;
-//         auto pitch = inSurface.pitch;
-//         auto bpp = inSurface.format.BytesPerPixel;
-//         T[] pixels = (cast(T *) inSurface.pixels)[0..inSize.x*inSize.y];
+//     auto r2 = radius * radius;
+//     auto Δs = r2.x * 2;
+//     auto Δt = r2.y * 2;
+//     auto c2 = p * 2;
+//     auto sab = sqrt(cast(double)(r2.x+r2.y));
+//     auto od = lrint(sab*0.01) + 1;
+//     auto dxt = lrint(cast(double)r2.x / sab) + od;
+//     auto s = -2 * r2.x * radius.y;
+//     auto p0 = SDL_Point(p.x,p.y-radius.y);
 
-//         foreach (y; 0..size.y)
+//     auto c = this.color;
+//     this.blendMode = (c.a == 255) ? SDL_BLENDMODE.NONE : SDL_BLENDMODE.BLEND ;
+
+//     drawPoint(p0);
+//     drawPoint({c2.x-p0.x; p0.y;});
+//     drawPoint({p0.x; c2.y-p0.y;});
+//     drawPoint({c2.x-p0.x; c2.y-p0.y;});
+
+//     foreach(i; 0..dxt)
+//     {
+//         p0.x--;
+//         d += t - r2.y;
+
+//         if (d >= 0) s.y = p0.y - 1;
+//         else if ((d - s - r2.x) > 0)
 //         {
-//             // the number of consecutive runs of hits or misses
-//             auto nRuns = 0;
-//             // count of consecutive written/non written pixels
-//             // positive written negative not written
-//             auto pixelsCount = 0;
-
-//             foreach(x; 0..size.x)
+//             if ((2*d-s-r2.x) >= 0) s.y = p.y + 1;
+//             else 
 //             {
-//                 vec2!float offset = vec2!float(cast(float)(y-center.y),cast(float)(center.x-x));
-//                 float Θ = atan2(offset.y,offset.x);
-
-//                 vec2!float pos = vec2!float(inSize.x*(Θ+π)/(π*2.0),0.0);
-//                 pos.y = (sin(Θ) == 0) ? 
-//                     (offset.x-innerRadius)*inSize.y/outerRadius : 
-//                     (offset.y/sin(Θ)-innerRadius)*inSize.y/outerRadius;
-
-//                 size_t index = y*size.x + x;
-
-//                 if (pos.x >= 0 && pos.x < inSize.w && 
-//                     pos.y >= 0 && pos.y < inSize.h)
-//                 {
-//                     // position in is map area - write into map
-//                     map[index] = pixels[cast(int)pos.y*pitch + cast(int)pos.x*bpp];
-
-//                     //this is the start of a run of hits
-//                     if (pixelsCount <= 0) 
-//                     {
-//                         // write number of empty pixels from last run to here
-//                         scanmap[y*4+nRuns] = -pixelsCount;
-//                         nRuns++;
-//                         pixelsCount = 0;
-//                     }
-//                     //register a hit
-//                     pixelsCount++;
-//                 }
-//                 else // its a miss 
-//                 {
-//                     map[index] = 0;
-
-//                     // last position was a hit
-//                     // this is the first in a run of misses 
-//                     if (pixelsCount > 0)
-//                     {
-//                         scanmap[y*4+nRuns] = pixelsCount;
-//                         nRuns++;
-//                         pixelsCount = 0;
-//                     }
-//                     //register a miss
-//                     pixelsCount--;
-//                 }
+//                 s.y = p.y;
+//                 p.y++;
+//                 d -= s + r2.x;
+//                 s += Δs;
 //             }
-
-//             // last x value was a hit
-//             // record another run 
-//             if (pixelsCount > 0) 
-//             {
-//                 scanmap[y*4+nRuns] = pixelsCount;
-//                 nRuns++;
-//             }   
-//             // if there are less than 4 nruns 
-//             // encode that into the scanmap
-//             for(; nRuns < 4; nRuns++)
-//             {
-//                 scanmap[y*4 + nRuns] = -1;
-//             }  
 //         }
-//     }
-//     ~this()
-//     {
-//         memory.allocator.dispose(scanmap);
-//         memory.allocator.dispose(map);
-//     }
-   
-//     bool createMap(ref SDLSurface outSurface, vec2!int dest)
-//     {
-//         int bpp = outSurface.format.BytesPerPixel;
-//         enforce (bpp == inSurface.format.BytesPerPixel,"VIDEO: error tmp buffer and video screen not same depth");
-
-//         if ( dest.x < 0 || dest.x+size.x >= outSurface.w ||  
-//              dest.y < 0 || dest.y+size.y >= outSurface.h)
+//         else
 //         {
-//             return true;
+//             p.y++;
+//             s.y = p.y + 1;
+//             d -= s + r2.x;
+//             s += Δs;
 //         }
+//         t -= Δt;
 
-//         if (outSurface.mustLock)
-//             enforce( outSurface.lock() == 0, "VIDEO : failed to lock surface");
-
-//         ubyte[] read = map[0..$];
-//         ubyte[] read2;
-//         ubyte[] write = cast(ubyte[]) outSurface.pixels[];
-//         ubyte[] write2;
-//         int[] readScanmap = scanmap[0..$];
+//         auto cp = (s == 0) ? 1.0 : min(cast(float) abs(d) / cast(float) abs(s), 1.0f);
+//         auto weightedColor = c.withAlphaWeight(cast(ubyte)(cp*255));
+//         auto iWeightedColor = c.withAlphaWeight(cast(ubyte)(255-cp*255));
 
 
-//         foreach(y; 0..size.y)
-//         {
-//             read = read[size.x..$];
-//             write = write[outPitch..$];
-//             readScanmap = readScanmap[scanLeft..$];
-
-
-//             while(offset != -1 && scanLeft)
-//             {
-//                 switch (bpp)
-//                 {
-//                     case 1:
-//                     {
-//                         foreach(i;0..offset)
-//                         {
-
-//                         }
-//                     }
-//                 }
-//             }            
-//         }
-
-//         if (outSurface.mustLock) outSurface.unlock();
- 
-//         return false;
 //     }
-
-//     // ref CircularMap scan(int size)
-//     // {
-
-//     // } 
-
-    
-
-
-//     SDLSurface inSurface;
-//     ubyte[] map;
-//     int[] scanmap;
-//     vec2!int size;
-//     vec2!int inSize;
-//     int innerRadius;
-//     int outerRadius;
-
-//     import sdl2.surface;
-//     import std.math: atan2, PI, sin;
-//     alias π = PI;
 // }
+// int aaellipseRGBA(SDL_Renderer * renderer, Sint16 x, Sint16 y, Sint16 rx, Sint16 ry, Uint8 r, Uint8 g, Uint8 b, Uint8 a)
+// {
+// 	int result;
+// 	int i;
+// 	int a2, b2, ds, dt, dxt, t, s, d;
+// 	Sint16 xp, yp, xs, ys, dyt, od, xx, yy, xc2, yc2;
+// 	float cp;
+// 	double sab;
+// 	Uint8 weight, iweight;
+
+
+// 	for (i = 1; i <= dxt; i++) {
+// 		xp--;
+// 		d += t - b2;
+
+// 		if (d >= 0)
+// 			ys = yp - 1;
+// 		else if ((d - s - a2) > 0) {
+// 			if ((2 * d - s - a2) >= 0)
+// 				ys = yp + 1;
+// 			else {
+// 				ys = yp;
+// 				yp++;
+// 				d -= s + a2;
+// 				s += ds;
+// 			}
+// 		} else {
+// 			yp++;
+// 			ys = yp + 1;
+// 			d -= s + a2;
+// 			s += ds;
+// 		}
+
+// 		t -= dt;
+
+// 		/* Calculate alpha */
+// 		if (s != 0) {
+// 			cp = (float) abs(d) / (float) abs(s);
+// 			if (cp > 1.0) {
+// 				cp = 1.0;
+// 			}
+// 		} else {
+// 			cp = 1.0;
+// 		}
+
+// 		/* Calculate weights */
+// 		weight = (Uint8) (cp * 255);
+// 		iweight = 255 - weight;
+
+// 		/* Upper half */
+// 		xx = xc2 - xp;
+// 		result |= pixelRGBAWeight(renderer, xp, yp, r, g, b, a, iweight);
+// 		result |= pixelRGBAWeight(renderer, xx, yp, r, g, b, a, iweight);
+
+// 		result |= pixelRGBAWeight(renderer, xp, ys, r, g, b, a, weight);
+// 		result |= pixelRGBAWeight(renderer, xx, ys, r, g, b, a, weight);
+
+// 		/* Lower half */
+// 		yy = yc2 - yp;
+// 		result |= pixelRGBAWeight(renderer, xp, yy, r, g, b, a, iweight);
+// 		result |= pixelRGBAWeight(renderer, xx, yy, r, g, b, a, iweight);
+
+// 		yy = yc2 - ys;
+// 		result |= pixelRGBAWeight(renderer, xp, yy, r, g, b, a, weight);
+// 		result |= pixelRGBAWeight(renderer, xx, yy, r, g, b, a, weight);
+// 	}
+
+// 	/* Replaces original approximation code dyt = abs(yp - yc); */
+// 	dyt = (Sint16)lrint((double)b2 / sab ) + od;    
+
+// 	for (i = 1; i <= dyt; i++) {
+// 		yp++;
+// 		d -= s + a2;
+
+// 		if (d <= 0)
+// 			xs = xp + 1;
+// 		else if ((d + t - b2) < 0) {
+// 			if ((2 * d + t - b2) <= 0)
+// 				xs = xp - 1;
+// 			else {
+// 				xs = xp;
+// 				xp--;
+// 				d += t - b2;
+// 				t -= dt;
+// 			}
+// 		} else {
+// 			xp--;
+// 			xs = xp - 1;
+// 			d += t - b2;
+// 			t -= dt;
+// 		}
+
+// 		s += ds;
+
+// 		/* Calculate alpha */
+// 		if (t != 0) {
+// 			cp = (float) abs(d) / (float) abs(t);
+// 			if (cp > 1.0) {
+// 				cp = 1.0;
+// 			}
+// 		} else {
+// 			cp = 1.0;
+// 		}
+
+// 		/* Calculate weight */
+// 		weight = (Uint8) (cp * 255);
+// 		iweight = 255 - weight;
+
+// 		/* Left half */
+// 		xx = xc2 - xp;
+// 		yy = yc2 - yp;
+// 		result |= pixelRGBAWeight(renderer, xp, yp, r, g, b, a, iweight);
+// 		result |= pixelRGBAWeight(renderer, xx, yp, r, g, b, a, iweight);
+
+// 		result |= pixelRGBAWeight(renderer, xp, yy, r, g, b, a, iweight);
+// 		result |= pixelRGBAWeight(renderer, xx, yy, r, g, b, a, iweight);
+
+// 		/* Right half */
+// 		xx = xc2 - xs;
+// 		result |= pixelRGBAWeight(renderer, xs, yp, r, g, b, a, weight);
+// 		result |= pixelRGBAWeight(renderer, xx, yp, r, g, b, a, weight);
+
+// 		result |= pixelRGBAWeight(renderer, xs, yy, r, g, b, a, weight);
+// 		result |= pixelRGBAWeight(renderer, xx, yy, r, g, b, a, weight);		
+// 	}
+
+// 	return (result);
+// }
+
+

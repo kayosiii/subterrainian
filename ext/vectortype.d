@@ -2,15 +2,7 @@ module vectortype;
 
 struct vec2(T)
 {
-    this(T[2] d)
-    {
-        data = d;
-    }
-    this (T x, T y)
-    {
-        this.x = x;
-        this.y = y;
-    }
+
     union
     {
         struct {T x; T y;}
@@ -24,7 +16,14 @@ struct vec2(T)
     }
     auto opBinary(string op)(const (T) rhs) const
     {
-        mixin("return vec2!T(x"~op~"rhs,y"~op~"rhs);");
+        // mixin("return vec2!T(x"~op~"rhs,y"~op~"rhs);");
+        mixin("return {data:this.data[]"~op~"rhs};");
+    }
+    auto opBinary(string op)(const(vec2!T) rhs)
+    {
+        vec2!T r;
+        mixin("r[] = data[] "~op~" rhs[];");
+        return r;
     }
 }
 

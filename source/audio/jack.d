@@ -20,7 +20,7 @@ import dsp;
 void open() @trusted @nogc 
 {
     emplace(&client, "subterrianian", JackOptions.NullOption, status);
-    enforce( client.empty == false, "failed to create jack client" );
+    // enforce( client.empty == false, "failed to create jack client" );
 
     foreach (ref input; mixer.inputs)
     {
@@ -57,11 +57,11 @@ void start() @trusted
     client.activate();
 
     auto ports = client.getPorts(null,null,JackPortFlags.IsInput|JackPortFlags.IsPhysical);
-    enforce( ports.length != 0, "no input ports found" );
+    // enforce( ports.length != 0, "no input ports found" );
     ports.destroy();
     
     ports = client.getPorts(null,null,JackPortFlags.IsOutput|JackPortFlags.IsPhysical);
-    enforce ( ports.length != 0, "no output ports found" );
+    // enforce ( ports.length != 0, "no output ports found" );
     ports.destroy();
 
     version (Posix) { while (thread_id == 0) Thread.sleep(msecs(10)); }

@@ -136,43 +136,43 @@ struct SDLFont
         TTF_SizeUTF8(ptr,text.ptr,&r.x,&r.y);
         return r;
     }
-    SDLSurface renderTextSolid(string s,SDL_Color c)
-    {
-        return SDLSurface(TTF_RenderText_Solid(ptr,s.ptr,c));
-    }
+    // SDLSurface renderTextSolid(string s,SDL_Color c)
+    // {
+    //     return SDLSurface(TTF_RenderText_Solid(ptr,s.ptr,c));
+    // }
 
-    SDLSurface renderUTF8Solid(string s, SDL_Color c)
-    {
-        return SDLSurface(TTF_RenderUTF8_Solid(ptr,s.ptr,c));
-    }
-    SDLSurface renderGlyphSolid(ushort glyph, SDL_Color c)
-    {
-        return SDLSurface(TTF_RenderGlyph_Solid(ptr,glyph,c));
-    }
-    SDLSurface renderTextShaded(string s, SDL_Color c1, SDL_Color c2)
-    {
-        return SDLSurface(TTF_RenderText_Shaded(ptr,s.ptr,c1,c2));
-    }
-    SDLSurface renderUTF8Shaded (string s, SDL_Color c1, SDL_Color c2)
-    {
-        return SDLSurface(TTF_RenderUTF8_Shaded(ptr,s.ptr,c1,c2));
-    }
-    SDLSurface renderGlyphShaded (ushort glyph, SDL_Color c1, SDL_Color c2)
-    {
-        return SDLSurface(TTF_RenderGlyph_Shaded(ptr,glyph,c1,c2));
-    }
-    SDLSurface renderTextBlended (string s, SDL_Color c)
-    {
-        return SDLSurface(TTF_RenderText_Blended(ptr,s.ptr,c));
-    }
-    SDLSurface renderUTF8Blended (string s, SDL_Color c)
-    {
-        return SDLSurface(TTF_RenderUTF8_Blended(ptr,s.ptr,c));
-    }
-    SDLSurface renderGlyphBlended (ushort glyph, SDL_Color c)
-    {
-        return SDLSurface(TTF_RenderGlyph_Blended(ptr,glyph,c));
-    }
+    // SDLSurface renderUTF8Solid(string s, SDL_Color c)
+    // {
+    //     return SDLSurface(TTF_RenderUTF8_Solid(ptr,s.ptr,c));
+    // }
+    // SDLSurface renderGlyphSolid(ushort glyph, SDL_Color c)
+    // {
+    //     return SDLSurface(TTF_RenderGlyph_Solid(ptr,glyph,c));
+    // }
+    // SDLSurface renderTextShaded(string s, SDL_Color c1, SDL_Color c2)
+    // {
+    //     return SDLSurface(TTF_RenderText_Shaded(ptr,s.ptr,c1,c2));
+    // }
+    // SDLSurface renderUTF8Shaded (string s, SDL_Color c1, SDL_Color c2)
+    // {
+    //     return SDLSurface(TTF_RenderUTF8_Shaded(ptr,s.ptr,c1,c2));
+    // }
+    // SDLSurface renderGlyphShaded (ushort glyph, SDL_Color c1, SDL_Color c2)
+    // {
+    //     return SDLSurface(TTF_RenderGlyph_Shaded(ptr,glyph,c1,c2));
+    // }
+    // SDLSurface renderTextBlended (string s, SDL_Color c)
+    // {
+    //     return SDLSurface(TTF_RenderText_Blended(ptr,s.ptr,c));
+    // }
+    // SDLSurface renderUTF8Blended (string s, SDL_Color c)
+    // {
+    //     return SDLSurface(TTF_RenderUTF8_Blended(ptr,s.ptr,c));
+    // }
+    // SDLSurface renderGlyphBlended (ushort glyph, SDL_Color c)
+    // {
+    //     return SDLSurface(TTF_RenderGlyph_Blended(ptr,glyph,c));
+    // }
     _TTF_Font * ptr;
 
     import core.stdc.string : strlen;

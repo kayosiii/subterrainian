@@ -437,7 +437,7 @@ extern(C)
     int SDL_GetRendererOutputSize(SDL_Renderer*, int*, int*) @nogc nothrow;
     SDL_Texture* SDL_CreateTexture(SDL_Renderer*, uint, int, int, int) @nogc nothrow;
     SDL_Texture* SDL_CreateTextureFromSurface(SDL_Renderer*, SDL_Surface*) @nogc nothrow;
-    int SDL_QueryTexture(SDL_Texture*, uint*, int*, int*, int*) @nogc nothrow;
+    int SDL_QueryTexture(SDL_Texture*, uint*, int*, int*, int*) @nogc nothrow pure;
     int SDL_SetTextureColorMod(SDL_Texture*, ubyte, ubyte, ubyte) @nogc nothrow;
     int SDL_GetTextureColorMod(SDL_Texture*, ubyte*, ubyte*, ubyte*) @nogc nothrow;
     int SDL_SetTextureAlphaMod(SDL_Texture*, ubyte) @nogc nothrow;
@@ -446,8 +446,8 @@ extern(C)
     int SDL_GetTextureBlendMode(SDL_Texture*, SDL_BlendMode*) @nogc nothrow;
     int SDL_UpdateTexture(SDL_Texture*, const(SDL_Rect)*, const(void)*, int) @nogc nothrow;
     int SDL_UpdateYUVTexture(SDL_Texture*, const(SDL_Rect)*, const(ubyte)*, int, const(ubyte)*, int, const(ubyte)*, int) @nogc nothrow;
-    int SDL_LockTexture(SDL_Texture*, const(SDL_Rect)*, void**, int*) @nogc nothrow;
-    void SDL_UnlockTexture(SDL_Texture*) @nogc nothrow;
+    int SDL_LockTexture(SDL_Texture*, const(SDL_Rect)*, void**, int*) @nogc nothrow pure;
+    void SDL_UnlockTexture(SDL_Texture*) @nogc nothrow pure;
     SDL_bool SDL_RenderTargetSupported(SDL_Renderer*) @nogc nothrow;
     int SDL_SetRenderTarget(SDL_Renderer*, SDL_Texture*) @nogc nothrow;
     SDL_Texture* SDL_GetRenderTarget(SDL_Renderer*) @nogc nothrow;

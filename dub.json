@@ -4,25 +4,30 @@
 	],
 	"copyright": "Copyright © 2020, Danni Coy",
 	"dependencies": {
+		"dxml": "~>0.4.3",
+		"erupted": "~>2.0.57",
 		"nogc": "~>0.5.0"
 	},
 	"description": "live looping software",
-	"license": "proprietary",
-	"name": "subterrainian",
-	"sourcePaths" : [
-		"source",
-		"ext"
+	"dflags": [
+		"-mixin=mixins.d",
+		"-preview=dip25",
+		"-preview=dip1000",
+		"-preview=markdown",
+		"-preview=fixAliasThis",
+		"-preview=rvaluerefparam",
+		"-version=X11"
 	],
-	"libs" :
-	[
+	"libs": [
 		"jack",
 		"X11",
 		"SDL2",
-		"SDL2_gfx",
 		"SDL2_ttf"
 	],
-	"dflags" :
-	[
-		"-version=X11"
+	"license": "proprietary",
+	"name": "subterrainian",
+	"sourcePaths": [
+		"source",
+		"ext"
 	]
 }
